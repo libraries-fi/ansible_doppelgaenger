@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   define_vagrant_vms config
   config.ssh.forward_agent = true
   config.ssh.insert_key = false
-  config.vm.box = "chef/debian-7.4"
+  config.vm.box = "debian/wheezy64"
 
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbooks/site.yml"
