@@ -67,8 +67,8 @@ def generate_hosts_file()
 
   hosts = File.read("hosts.base")
   inventory = create_dev_inventory
-  inventory["_meta"]["hostvars"].each do |hostname, config|
-    hosts += config["ansible_ssh_host"] + " " + hostname + "\n"
+  inventory["vagrant"]["hosts"].each do |hostname, value|
+    hosts += inventory["_meta"]["hostvars"][hostname]["ansible_ssh_host"] + " " + hostname + "\n"
   end
   hosts
 end
