@@ -181,6 +181,23 @@ def create_vagrant_group(inventory)
   end
 end
 
+def get_all_inventory_hosts(inventory)
+  hosts = []
+  inventory.each do |key, value|
+    if value.key?("hosts") && value["hosts"] != []
+      hosts += value["hosts"]
+    end
+  end
+  hosts
+end
+
+def get_hostvars_for_production(production_hosts)
+  hostvars = {}
+  production_hosts.each do |host|
+    hostvars[host] = {"ansible_ssh_user" => "root"}
+  end
+  hostvars
+end
 
 def create_dev_inventory ()
   if ! File.file? "playbooks/inventory.yaml"
@@ -195,10 +212,18 @@ def create_dev_inventory ()
   ip, hosts_to_add = find_new_hosts_and_max_ip(inventory, ip_mapping)
   save_ip_mapping(hosts_to_add, ip, ip_mapping)
 
+  production_hosts = get_all_inventory_hosts(inventory)
   inventory = set_ips(ip_mapping, inventory)
   inventory = set_hostnames(inventory)
   inventory["_meta"]["hostvars"] = get_hostvars(inventory)
   create_vagrant_group(inventory)
+
+  if ! inventory.key?("ungrouped") || ! inventory["ungrouped"].key?("hosts")
+    inventory["ungrouped"] = {"hosts" => [] }
+  end
+  inventory["ungrouped"]["hosts"] += production_hosts
+
+  inventory["_meta"]["hostvars"].merge!(get_hostvars_for_production(production_hosts))
   inventory
 end
 
