@@ -10,6 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   define_vagrant_vms config
   config.ssh.forward_agent = true
   config.ssh.insert_key = false
+  config.ssh.private_key_path = "/home/anttis/.vagrant.d/insecure_private_key"
   config.vm.box = "debian/wheezy64"
 
   config.vm.provision "ansible" do |ansible|
@@ -20,9 +21,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ansible.skip_tags = ['production_only']
     ansible.host_key_checking = false
     ansible.raw_ssh_args = ['-o UserKnownHostsFile=/dev/null']
-    ansible.extra_vars = { ansible_ssh_user: 'vagrant',
-                           site_content_sync: 'True',
-                           file_sync_no_controlhost: 'True',
+    ansible.force_remote_user = false
+    ansible.extra_vars = {
+      file_sync_no_controlhost: 'True',
                          }
   end
 end
