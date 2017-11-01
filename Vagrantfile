@@ -10,7 +10,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   define_vagrant_vms config
   config.ssh.forward_agent = true
   config.ssh.insert_key = false
-  config.ssh.private_key_path = "/home/anttis/.vagrant.d/insecure_private_key"
+  config.ssh.private_key_path = "~/.vagrant.d/insecure_private_key"
   config.vm.box = "debian/wheezy64"
 
   config.vm.provision "ansible" do |ansible|
