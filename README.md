@@ -11,8 +11,10 @@ in YAML format.
 
 Usage
 -------------
-Symlink playbooks like "ln -s /path/to/playbooks playbooks". Vagrant is ready to run, see a list
-of configured boxes with "vagrant status". IPs will be assigned on first run (in ip_mapping.json).
+Symlink playbooks like "ln -s /path/to/playbooks playbooks". Additionally, if you are using
+Ansible v2.4 then also make symlinks "ln -s playbooks/group_vars group_vars" and
+"ln -s playbooks/host_vars host_vars". Vagrant is ready to run, see a list of configured boxes
+with "vagrant status". IPs will be assigned on first run (in ip_mapping.json).
 
 Optionally generate a hosts file with "./inventory.rb --hosts". If using this, keep hosts.base up
 to date.
