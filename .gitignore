@@ -1,3 +1,5 @@
 ip_mapping.json
 hosts.base
 playbooks
+shared
+.vagrant

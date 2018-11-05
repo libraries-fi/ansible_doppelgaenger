@@ -11,10 +11,23 @@ in YAML format.
 
 Usage
 -------------
-Symlink playbooks like "ln -s /path/to/playbooks playbooks". Additionally, if you are using
-Ansible v2.4 then also make symlinks "ln -s playbooks/group_vars group_vars" and
-"ln -s playbooks/host_vars host_vars". Vagrant is ready to run, see a list of configured boxes
-with "vagrant status". IPs will be assigned on first run (in ip_mapping.json).
 
-Optionally generate a hosts file with "./inventory.rb --hosts". If using this, keep hosts.base up
+1. Install jinja2 version 2.8, newer versions have still bugs in ansible.
+    ```sh
+    pip install jinja2=2.8 --user
+    ```
+1. Install ansible version 2.7
+    ```sh
+    pip install ansible==2.7 --user
+    ```
+1. Symlink playbooks 
+    ```sh
+    ln -s /path/to/playbooks playbooks
+    ```
+1. Configure ansible-vault password path (vault_password_file) in ansible.cfg.
+
+Vagrant is ready to run, see a list of configured boxes
+with `vagrant status`. IPs will be assigned on first run (in ip_mapping.json).
+
+Optionally generate a hosts file with `./inventory.rb --hosts`. If using this, keep hosts.base up
 to date.
