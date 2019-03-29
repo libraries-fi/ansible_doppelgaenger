@@ -4,16 +4,24 @@ require 'json'
 require 'yaml'
 require 'ipaddr'
 require 'fileutils'
+require 'pathname'
+
+# Use property 'vagrant_synced_folders' in inventory.yml to specify
+# list of synced folders for each host.
+# If it is missing use default /srv/sites folder.
+SyncedFolderConfig = Struct.new(:name, :path)
+DEFAULT_SYNCED_FOLDER = SyncedFolderConfig.new("sites", "/srv/sites")
+SYNCED_FOLDERS_BASE = Pathname("shared")
 
 # Sets the development IP addresses in host vars overriding previous values.
 def set_ips(ip_mapping, inventory)
   ip_mapping.each do |dev_host, settings|
 
     if ! inventory["_meta"]["hostvars"].key?(dev_host)
-        inventory["_meta"]["hostvars"][dev_host] = {}
-      end
+      inventory["_meta"]["hostvars"][dev_host] = {}
+    end
 
-      inventory["_meta"]["hostvars"][dev_host]["ansible_ssh_host"] = settings["ansible_ssh_host"]
+    inventory["_meta"]["hostvars"][dev_host]["ansible_ssh_host"] = settings["ansible_ssh_host"]
   end
   inventory
 end
@@ -41,6 +49,44 @@ def set_hostnames(inventory)
   inventory
 end
 
+def configure_synced_folders(vm_config, hostname, config)
+  synced_folders_host = SYNCED_FOLDERS_BASE + hostname
+  synced_folders = config
+    .fetch("vagrant_synced_folders", [])
+    .map! { |c| SyncedFolderConfig.new(c["name"], c["path"]) }
+
+  # Move synced files to a new setup, where there can be multiple synced folders in
+  # subdirectories inside shared/hostname. Check that this is first time running after shared
+  # folder layout change and vagrant_synced_folders option in not yet used.
+  # NOTE: This can be deleted when all files have been moved.
+  if synced_folders.empty?
+    default = synced_folders_host + DEFAULT_SYNCED_FOLDER.name
+
+    if !default.directory? && synced_folders_host.directory? &&
+        !synced_folders_host.children(false).empty?
+      puts "inventory.rb: Moving old synced files to a new directory!"
+      to_move = synced_folders_host.children
+      FileUtils.mkdir(default)
+      FileUtils.mv(to_move, default)
+    end
+  end
+
+  synced_folders = [DEFAULT_SYNCED_FOLDER] if synced_folders.empty?
+
+  synced_folders.each do |synced_folder|
+    synced_folder_vm = Pathname(synced_folder.path)
+
+    vm_config.vm.synced_folder(
+      (synced_folders_host + synced_folder.name).to_s,
+      synced_folder_vm.to_s,
+      create: true,
+      owner: "vagrant",
+      group: "www-data",
+      mount_options: ["dmode=775,fmode=664"]
+    )
+  end
+end
+
 def define_vagrant_vms(vagrant_config)
   inventory = create_dev_inventory
 
@@ -48,11 +94,7 @@ def define_vagrant_vms(vagrant_config)
     vagrant_config.vm.define hostname do |vm_config|
       vm_config.vm.hostname = hostname
       vm_config.vm.network "private_network", ip: config["ansible_ssh_host"]
-      vm_config.vm.synced_folder "shared/" + hostname + "/", "/srv/sites",
-                                 create: true,
-                                 owner: "vagrant",
-                                 group: "www-data",
-                                 mount_options: ["dmode=775,fmode=664"]
+      configure_synced_folders(vm_config, hostname, config)
       if config.key?("vagrant_box")
         vm_config.vm.box = config["vagrant_box"]
       end
@@ -199,7 +241,7 @@ def get_hostvars_for_production(production_hosts)
   hostvars
 end
 
-def create_dev_inventory ()
+def create_dev_inventory()
   if ! File.file? "playbooks/inventory.yaml"
     puts "Inventory not found."
     exit 1

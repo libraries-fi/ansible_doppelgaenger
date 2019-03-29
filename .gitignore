@@ -3,3 +3,5 @@ hosts.base
 playbooks
 shared
 .vagrant
+group_vars
+host_vars
