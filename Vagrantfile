@@ -16,6 +16,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     id: "vagrant-root"
   config.vm.box = "debian/wheezy64"
 
+  config.vm.provider :libvirt do |libvirt|
+    libvirt.memory = 1024
+  end
+
   config.vm.provision "ansible" do |ansible|
     ansible.playbook = "playbooks/site.yml"
     # ansible.verbose = 'vvvv'
